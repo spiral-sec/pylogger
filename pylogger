@@ -4,23 +4,27 @@ import struct
 import socket
 import glob
 from select import select
+from typing import List, BinaryIO
+import os
 
-def read_loop(socket):
-    fds = [open(f, 'rb') for f in glob.glob("/dev/input/by-path/*kbd")]
-    struct_format = 'llHHI'
-    event_struct_size = struct.calcsize(struct_format)
+
+def read_loop(socket: socket) -> None:
+    fds: List[BinaryIO] = [open(f, 'rb') for f in glob.glob("/dev/input/by-path/*kbd")]
+    struct_format: str = 'llHHI'
+    event_struct_size: struct = struct.calcsize(struct_format)
 
     while True:
-        readables, _, _ = select.select(fds, [], [], 0.5)
+        readables, _, _ = select(fds, [], [], 0.5)
         if not readables:
             continue
 
-        events = [r.read(event_struct_size) for r in readables]
+        events: List[bytes] = [r.read(event_struct_size) for r in readables]
         for ev in events:
             (_, _, t, c, v) = struct.unpack(struct_format, ev)
             socket.send(f'{t},{c},{v}')
 
+
 if __name__ == "__main__":
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(("192.168.1.58", 6969))
+    s: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((os.environ.get("HOST", "192.168.1.58"), 6969))
     read_loop(s)

