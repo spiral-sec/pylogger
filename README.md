@@ -64,7 +64,7 @@ pip3 install pyinstaller
 
 You can read [this](https://pyinstaller.readthedocs.io/en/stable/usage.html) documentation to know how to do it.
 
-- [ ] Run pyinstaller on the victim script
+- [ ] Run pyinstaller on the victim script, and name it `pylogger`.
 
 ## Step 4 : Basic Obfuscation
 
@@ -77,7 +77,7 @@ It is bad : we don't want smart reverse engineer guys to understand exactly how 
 
 To do so, find a way to get this output :
 ```sh
-nm: ransom: no symbols
+nm: pylogger: no symbols
 ```
 
 ### Step 2
@@ -95,7 +95,7 @@ and nothing else !!
 
 with the command:
 ```sh
-$ objdump -fs ransom
+$ objdump -fs pylogger
 ```
 
 Difficult huh ? Make some researches ^^
