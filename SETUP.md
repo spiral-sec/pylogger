@@ -12,7 +12,7 @@ In order to have the exact same dependencies as the ones in the `pylogger` and `
 you should install a virtual environment and download the dependencies with their specific versions
 mentioned in the `requirements.txt`.
 
-First, install [pip3](), the official package manager of python : 
+First, install [pip3](), the official package manager of python :
 
 ### Fedora
 ```shell
@@ -30,13 +30,13 @@ pip3 install virtualenv
 ```
 
 ### Build
-Now you can build your `virtualenv` in the current folder : 
+Now you can build your `virtualenv` in the current folder :
 ```shell
 virtualenv venv
 ```
 > :bulb: Here, we name our `virtualenv` folder `venv`, but you could have given any other name.
 
-And to activate it : 
+And to activate it :
 
 ```shell
 . venv/bin/source/activate
