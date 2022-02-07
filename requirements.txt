@@ -2,3 +2,4 @@ pynput==1.7.4
 sockets==1.0.0
 pycryptodome==3.14.1
 pandas==1.0.5
+pyinstaller==4.9.0
